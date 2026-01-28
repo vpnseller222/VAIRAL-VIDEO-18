@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAIRAL VIDEO 🔞 - M R DEVELOPER</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { 
+            --primary: #6366f1; --secondary: #0ea5e9; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc;
+            --success: #10b981; --error: #ef4444;
+        }
+        
+        body { 
+            background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe UI', sans-serif; 
+            margin: 0; padding-bottom: 110px; overflow-x: hidden;
+        }
+
+        /* কাস্টম সংকেত নোটিশ স্টাইল */
+        .toast-notice {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            padding: 15px 25px; border-radius: 12px; font-weight: 900; font-size: 15px;
+            z-index: 20000; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px;
+            min-width: 280px; justify-content: center;
+        }
+        .toast-notice.show { top: 30px; }
+        .toast-success { background: var(--success); color: white; border-bottom: 4px solid #065f46; }
+        .toast-error { background: var(--error); color: white; border-bottom: 4px solid #991b1b; }
+
+        /* Page System */
+        .page-section { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .active-section { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* Header UI */
+        .header-section { 
+            background: linear-gradient(135deg, #1e1b4b, #312e81); 
+            padding: 30px 15px 55px; text-align: center; border-radius: 0 0 50px 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .header-section h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 1.5px; color: #fff; }
+
+        /* Top UI: Balance & Profile Pic */
+        .top-ui-container { margin: -30px 20px 20px; display: flex; justify-content: center; align-items: center; gap: 15px; }
+        .top-balance-card {
+            background: linear-gradient(90deg, #0ea5e9, #6366f1); padding: 10px 20px;
+            border-radius: 18px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4); border: 1px solid rgba(255,255,255,0.2);
+            flex-grow: 1; max-width: 250px;
+        }
+        .balance-info h2 { margin: 2px 0 0; font-size: 18px; font-weight: 900; }
+        .user-profile-img-top { width: 55px; height: 55px; border-radius: 50%; border: 3px solid var(--secondary); object-fit: cover; }
+
+        /* Trending Section Label */
+        .trending-label-container { padding: 10px 20px; text-align: left; }
+        .trending-label { font-size: 18px; font-weight: 900; color: var(--secondary); text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+
+        /* Updated Search Container */
+        .search-container { padding: 0 15px 20px; }
+        .search-box { 
+            width: 100%; padding: 15px 20px; border-radius: 15px; 
+            border: 1.5px solid var(--primary); background: #1e293b; 
+            color: white; outline: none; font-size: 16px; box-sizing: border-box;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .search-box::placeholder { color: #94a3b8; font-size: 14px; }
+
+        /* Video Card Design */
+        .main-content { padding: 0 12px; display: flex; flex-direction: column; gap: 15px; }
+        .card { background: var(--card-bg); border-radius: 20px; display: flex; align-items: center; padding: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .thumb-box { width: 110px; height: 75px; min-width: 110px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(14, 165, 233, 0.2); }
+        .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+        .card-details { flex-grow: 1; padding-left: 15px; overflow: hidden; }
+        .video-title { margin: 0 0 8px; font-size: 15px; font-weight: 800; color: #fff; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-wrap: break-word; }
+        
+        .unlock-btn { background: linear-gradient(135deg, var(--primary), #312e81); color: #fff; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .inbox-red-btn { background: var(--error) !important; color: #fff !important; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+
+        /* Referral Design */
+        .refer-bonus-tag { background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 10px; border-radius: 10px; font-weight: 900; font-size: 18px; border: 1px solid var(--success); margin: 15px 0; }
+        .ref-box { background: #0f172a; padding: 15px; border-radius: 15px; border: 1.5px dashed var(--secondary); margin: 15px 0; }
+        .copy-btn { background: var(--secondary); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 800; cursor: pointer; margin-top: 10px; width: 100%; }
+
+        /* Profile & History Area */
+        .section-container { padding: 20px; text-align: center; }
+        .glass-card { background: var(--card-bg); border-radius: 30px; padding: 25px; border: 1px solid var(--primary); margin-bottom: 20px; }
+        .user-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid var(--secondary); margin-bottom: 15px; box-shadow: 0 0 25px rgba(14, 165, 233, 0.5); }
+        .withdraw-area { text-align: left; background: #0f172a; padding: 20px; border-radius: 20px; border: 1px solid #334155; }
+        .history-card { background: #0f172a; padding: 15px; border-radius: 15px; margin-top: 20px; text-align: left; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 12px; color: #cbd5e1; margin-top: 15px; }
+        .history-table th, .history-table td { padding: 10px; border-bottom: 1px solid #1e293b; text-align: left; }
+
+        /* Bottom Nav Bar */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #1e293b; 
+            display: flex; justify-content: space-around; padding: 15px 0; 
+            border-radius: 30px 30px 0 0; border-top: 2px solid var(--primary); 
+            z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.7); 
+        }
+        .nav-item { text-align: center; color: #94a3b8; font-size: 11px; font-weight: 800; cursor: pointer; flex: 1; transition: 0.3s; }
+        .nav-item i { font-size: 24px; display: block; margin-bottom: 6px; }
+        .nav-item.active { color: var(--secondary); transform: translateY(-5px); }
+
+        /* Overlay */
+        #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; }
+        .timer-circle { width: 80px; height: 80px; border: 8px solid #334155; border-top: 8px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--primary); }
+        .spinning { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="notice-toast" class="toast-notice"><i id="toast-icon"></i> <span id="toast-text"></span></div>
+
+    <div id="home" class="page-section active-section">
+        <div class="header-section"><h1>VAIRAL VIDEO 🔞</h1></div>
+        <div class="top-ui-container">
+            <div class="top-balance-card">
+                <div class="balance-info"><h5>My Balance</h5><h2 id="home-total-balance">৳ 0.00</h2></div>
+                <i class="fas fa-wallet" style="font-size: 18px;"></i>
+            </div>
+            <img src="" id="user-avatar-top" class="user-profile-img-top">
+        </div>
+        <div class="trending-label-container"><div class="trending-label"><i class="fas fa-fire"></i> Trending Videos</div></div>
+        <div class="search-container">
+            <input type="text" id="videoSearch" class="search-box" placeholder="ভিডিওর নাম বা নাম্বার লিখে খুঁজুন..." oninput="renderUI()">
+        </div>
+        <div class="main-content" id="video-display">লোডিং...</div>
+    </div>
+
+    <div id="earn" class="page-section section-container">
+        <div class="glass-card"><i class="fas fa-coins" style="font-size: 50px; color: gold;"></i><h2>Earn Rewards</h2><p>টাস্ক শীঘ্রই আপডেট হবে।</p></div>
+    </div>
+
+    <div id="refer" class="page-section section-container">
+        <div class="glass-card">
+            <h2>👥 Referral System</h2>
+            <div class="refer-bonus-tag">প্রতি রেফারে বোনাস: ৳২৫.০০</div>
+            <p style="font-size:13px; color:#cbd5e1;">আপনার ইউনিক রেফারেল লিঙ্কটি কপি করে বন্ধুদের পাঠান।</p>
+            <div class="ref-box">
+                <p id="ref-link" style="font-size:11px; word-break: break-all; color:var(--secondary);"></p>
+                <button onclick="copyRef()" class="copy-btn">COPY REFERRAL LINK</button>
+            </div>
+            <div style="margin-top:20px;">
+                <p>আপনার মোট রেফার: <strong id="ref-count" style="font-size:24px; color:var(--primary);">0</strong></p>
+                <small style="color:var(--error); font-weight:bold;">*উইথড্র করার জন্য ২০ জন রেফার বাধ্যতামূলক।</small>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile" class="page-section section-container">
+        <div class="glass-card">
+            <img src="" id="user-avatar" class="user-avatar">
+            <h3 id="user-full-name" style="margin:5px 0;">Name</h3>
+            <p id="user-username" style="font-size:13px; color:#94a3b8; margin:2px 0;">@username</p>
+            <p id="user-telegram-id" style="font-size:13px; color:#94a3b8; margin:2px 0;">ID: 000000</p>
+            <div style="background: linear-gradient(135deg, #1e40af, #1e1b4b); padding: 20px; border-radius: 20px; margin: 20px 0; border: 1px solid var(--secondary);"><small>Current Balance</small><h1 id="prof-bal" style="margin:10px 0; color:#10b981;">৳ 0.00</h1></div>
+            
+            <div class="withdraw-area">
+                <h4 style="color:var(--secondary); margin-bottom:15px; text-align:center;">REQUEST WITHDRAWAL</h4>
+                <select id="w-method" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155;">
+                    <option value="Bkash">বিকাশ (Bkash)</option>
+                    <option value="Nagad">নগদ (Nagad)</option>
+                    <option value="Rocket">রকেট (Rocket)</option>
+                </select>
+                <input type="number" id="w-amount" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155; margin:10px 0;" placeholder="পরিমাণ (Min 500)">
+                <input type="number" id="w-phone" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155;" placeholder="মোবাইল নাম্বার">
+                <button class="unlock-btn" style="width:100%; padding:15px; margin-top:15px; font-size:15px; font-weight: 900;" onclick="handleWithdraw()">SUBMIT WITHDRAW</button>
+            </div>
+            
+            <div class="history-card">
+                <h4><i class="fas fa-history"></i> Withdrawal History</h4>
+                <table class="history-table">
+                    <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
+                    <tbody id="withdraw-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="verify-overlay"><div class="timer-circle spinning" id="timer-display">10</div><h2 style="color:var(--secondary); margin-top:20px;">বিজ্ঞাপন যাচাই...</h2></div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('home', this)"><i class="fas fa-home"></i>Home</div>
+        <div class="nav-item" onclick="showPage('earn', this)"><i class="fas fa-wallet"></i>Earn</div>
+        <div class="nav-item" onclick="showPage('refer', this)"><i class="fas fa-user-plus"></i>Refer</div>
+        <div class="nav-item" onclick="showPage('profile', this)"><i class="fas fa-user-circle"></i>Profile</div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://vairal-video-18-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const tg = window.Telegram.WebApp; tg.expand();
+
+        const user = tg.initDataUnsafe?.user || { id: 12345678, first_name: "User" };
+        const BOT_USERNAME = "vairal_video_18_bot"; 
+        let userBalance = 0.00; let userRefs = 0;
+
+        // User Setup
+        document.getElementById('user-full-name').innerText = user.first_name + (user.last_name ? " " + user.last_name : "");
+        document.getElementById('user-username').innerText = "@" + (user.username || "n/a");
+        document.getElementById('user-telegram-id').innerText = "ID: " + user.id;
+        document.getElementById('user-avatar').src = user.photo_url || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+        document.getElementById('user-avatar-top').src = user.photo_url || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+        function showNotice(text, type) {
+            const toast = document.getElementById('notice-toast');
+            const icon = document.getElementById('toast-icon');
+            toast.className = `toast-notice ${type === 'success' ? 'toast-success' : 'toast-error'} show`;
+            icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+            document.getElementById('toast-text').innerText = text;
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        // Firebase Listeners
+        db.ref('users/' + user.id + '/balance').on('value', (s) => { 
+            userBalance = s.val() || 0.00; 
+            document.getElementById('home-total-balance').innerText = "৳ " + userBalance.toFixed(2);
+            document.getElementById('prof-bal').innerText = "৳ " + userBalance.toFixed(2);
+            renderUI(); 
+        });
+        db.ref('users/' + user.id + '/refs').on('value', (s) => { userRefs = s.val() || 0; document.getElementById('ref-count').innerText = userRefs; });
+        db.ref('withdrawals/' + user.id).on('value', (s) => {
+            const data = s.val(); const list = document.getElementById('withdraw-list');
+            if(data) { list.innerHTML = ""; Object.keys(data).forEach(id => { const w = data[id]; list.innerHTML += `<tr><td>${w.date}</td><td>৳${w.amount}</td><td>${w.method}</td><td style="color:#facc15">${w.status}</td></tr>`; }); }
+        });
+
+        const myRefLink = `https://t.me/${BOT_USERNAME}?start=${user.id}`;
+        document.getElementById('ref-link').innerText = myRefLink;
+
+        let allVideos = {}; 
+        function getEpNum(name) {
+            const match = name.match(/(?:episode|ep|এপিসোড|id)\s*(\d+)/i);
+            return match ? parseInt(match[1]) : 0;
+        }
+
+        db.ref('videos').on('value', (s) => { allVideos = s.val() || {}; renderUI(); });
+
+        function showPage(p, el) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-section'));
+            document.getElementById(p).classList.add('active-section');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // Updated RenderUI Function with Search Logic
+        function renderUI() {
+            const container = document.getElementById('video-display');
+            const search = document.getElementById('videoSearch').value.toLowerCase().trim();
+            container.innerHTML = "";
+
+            let videoList = Object.keys(allVideos).map(id => ({ ...allVideos[id], id: id }));
+            videoList.sort((a, b) => getEpNum(b.name) - getEpNum(a.name)); 
+
+            videoList.forEach((v) => {
+                // সার্চ ফিল্টারিং লজিক: নাম অথবা নাম্বার মিললে দেখাবে
+                const nameMatch = v.name.toLowerCase().includes(search);
+                const numMatch = getEpNum(v.name).toString().includes(search);
+
+                if (search && !nameMatch && !numMatch) return;
+
+                const isLocked = localStorage.getItem('time_'+v.id) && (Date.now() - localStorage.getItem('time_'+v.id) < 86400000);
+                let btnTxt = isLocked ? "INBOX" : "UNLOCK";
+                let btnClass = isLocked ? "inbox-red-btn" : "unlock-btn";
+
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="thumb-box"><img src="${v.photo}"></div>
+                        <div class="card-details">
+                            <h3 class="video-title">${v.name}</h3>
+                            <button class="${btnClass}" onclick="handleAction('${v.id}', ${JSON.stringify(v.ads)})">
+                                ${btnTxt}
+                            </button>
+                        </div>
+                    </div>`;
+            });
+
+            if (container.innerHTML === "") {
+                container.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8;'>কোনো ভিডিও পাওয়া যায়নি!</div>";
+            }
+        }
+
+        function handleAction(id, ads) {
+            if (localStorage.getItem('time_' + id) && (Date.now() - localStorage.getItem('time_' + id) < 86400000)) {
+                showNotice('ইতিমধ্যে নিয়েছেন! ইনবক্স চেক করুন।', 'error'); return;
+            }
+            document.getElementById('verify-overlay').style.display = 'flex';
+            let timeLeft = 10;
+            const interval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-display').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    document.getElementById('verify-overlay').style.display = 'none';
+                    localStorage.setItem('time_'+id, Date.now()); renderUI();
+                    window.location.href = `https://t.me/${BOT_USERNAME}?start=vid_${id}`;
+                }
+            }, 1000);
+            setTimeout(() => tg.openLink(ads[0]), 800);
+        }
+
+        function copyRef() {
+            const el = document.createElement('textarea'); el.value = myRefLink; document.body.appendChild(el);
+            el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            showNotice('লিঙ্ক কপি হয়েছে!', 'success');
+        }
+
+        function handleWithdraw() {
+            const amt = document.getElementById('w-amount').value;
+            const phone = document.getElementById('w-phone').value;
+            const method = document.getElementById('w-method').value;
+            if (amt < 500) return showNotice('সর্বনিম্ন ৫০০ টাকা হতে হবে!', 'error');
+            if (userRefs < 20) return showNotice('উইথড্রর জন্য ২০ জন রেফার লাগবে!', 'error');
+            if (!phone) return showNotice('সঠিক নাম্বার দিন!', 'error');
+            
+            db.ref('withdrawals/' + user.id).push({ amount: amt, method: method, phone: phone, date: new Date().toLocaleDateString(), status: "Pending" });
+            showNotice('রিকোয়েস্ট পাঠানো হয়েছে!', 'success');
+        }
+    </script>
+</body>
+</html>
