@@ -116,7 +116,7 @@
         .nav-item i { font-size: 24px; display: block; margin-bottom: 6px; }
         .nav-item.active { color: var(--secondary); transform: translateY(-5px); }
 
-        /* Loader */
+        /* Loader Overlay */
         #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; }
         .loader-spin { width: 50px; height: 50px; border: 5px solid #334155; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -152,7 +152,7 @@
                     </div>
                     <div class="task-btn-group">
                         <button class="task-btn" onclick="tg.openLink('https://t.me/vairal_video18_update')">JOIN</button>
-                        <button class="refresh-btn" onclick="verifyMembership()">REFRESH</button>
+                        <button class="refresh-btn" onclick="directReward()">REFRESH</button>
                     </div>
                 </div>
                 <p id="no-tasks" style="display:none; color:#94a3b8;">সব টাস্ক সম্পন্ন হয়েছে!</p>
@@ -287,30 +287,21 @@
             });
         }
 
-        // ১০০% ভেরিফিকেশন লজিক
-        function verifyMembership() {
+        // রিফ্রেশ করলেই রিওয়ার্ড দেওয়ার লজিক
+        function directReward() {
             if(localStorage.getItem('task_tg_done')) return;
             
             document.getElementById('verify-overlay').style.display = 'flex';
             
-            // ফায়ারবেসের মাধ্যমে চেক করা হচ্ছে বটের ব্যাকএন্ড সে জয়েন হয়েছে কি না সেটি কনফার্ম করেছে কি না
-            db.ref('users/' + user.id + '/tg_task_status').once('value', (s) => {
-                const status = s.val(); // বটের পাইথন স্ক্রিপ্ট এই ভ্যালু ট্রু করবে যদি সে জয়েন থাকে
-                
-                setTimeout(() => {
-                    document.getElementById('verify-overlay').style.display = 'none';
-                    if(status === true) {
-                        db.ref('users/' + user.id + '/balance').transaction((currentBal) => {
-                            return (currentBal || 0) + 25.00;
-                        });
-                        localStorage.setItem('task_tg_done', 'true');
-                        showNotice('অভিনন্দন! ৳২৫ যোগ হয়েছে।', 'success');
-                        checkTasks();
-                    } else {
-                        showNotice('আপনি এখনও জয়েন করেননি! জয়েন করে রিফ্রেশ দিন।', 'error');
-                    }
-                }, 1500);
-            });
+            setTimeout(() => {
+                db.ref('users/' + user.id + '/balance').transaction((currentBal) => {
+                    return (currentBal || 0) + 25.00;
+                });
+                localStorage.setItem('task_tg_done', 'true');
+                document.getElementById('verify-overlay').style.display = 'none';
+                showNotice('অভিনন্দন! ৳২৫ যোগ হয়েছে।', 'success');
+                checkTasks();
+            }, 1000); 
         }
 
         function checkTasks() {
