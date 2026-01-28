@@ -152,7 +152,7 @@
                     </div>
                     <div class="task-btn-group">
                         <button class="task-btn" onclick="tg.openLink('https://t.me/vairal_video18_update')">JOIN</button>
-                        <button class="refresh-btn" onclick="verifyAndReward()">REFRESH</button>
+                        <button class="refresh-btn" onclick="verifyMembership()">REFRESH</button>
                     </div>
                 </div>
                 <p id="no-tasks" style="display:none; color:#94a3b8;">সব টাস্ক সম্পন্ন হয়েছে!</p>
@@ -287,24 +287,30 @@
             });
         }
 
-        // নতুন ভেরিফাই লজিক (টাইমার ছাড়া)
-        function verifyAndReward() {
+        // ১০০% ভেরিফিকেশন লজিক
+        function verifyMembership() {
             if(localStorage.getItem('task_tg_done')) return;
             
             document.getElementById('verify-overlay').style.display = 'flex';
             
-            // বটের মাধ্যমে চ্যানেলের মেম্বার কি না তা চেক করার লজিক এখানে কল হবে। 
-            // বর্তমানে লজিক অনুযায়ী রিফ্রেশ করলেই ব্যালেন্স আপডেট হবে (যদি আগে না হয়ে থাকে)।
-            setTimeout(() => {
-                db.ref('users/' + user.id + '/balance').once('value', (s) => {
-                    let currentBal = s.val() || 0;
-                    db.ref('users/' + user.id + '/balance').set(currentBal + 25.00);
-                    localStorage.setItem('task_tg_done', 'true');
+            // ফায়ারবেসের মাধ্যমে চেক করা হচ্ছে বটের ব্যাকএন্ড সে জয়েন হয়েছে কি না সেটি কনফার্ম করেছে কি না
+            db.ref('users/' + user.id + '/tg_task_status').once('value', (s) => {
+                const status = s.val(); // বটের পাইথন স্ক্রিপ্ট এই ভ্যালু ট্রু করবে যদি সে জয়েন থাকে
+                
+                setTimeout(() => {
                     document.getElementById('verify-overlay').style.display = 'none';
-                    showNotice('অভিনন্দন! ৳২৫ যোগ হয়েছে।', 'success');
-                    checkTasks();
-                });
-            }, 2000); // ২ সেকেন্ডের একটি প্রসেসিং ফেক লোডার
+                    if(status === true) {
+                        db.ref('users/' + user.id + '/balance').transaction((currentBal) => {
+                            return (currentBal || 0) + 25.00;
+                        });
+                        localStorage.setItem('task_tg_done', 'true');
+                        showNotice('অভিনন্দন! ৳২৫ যোগ হয়েছে।', 'success');
+                        checkTasks();
+                    } else {
+                        showNotice('আপনি এখনও জয়েন করেননি! জয়েন করে রিফ্রেশ দিন।', 'error');
+                    }
+                }, 1500);
+            });
         }
 
         function checkTasks() {
