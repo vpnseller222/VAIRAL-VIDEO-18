@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VAIRAL VIDEO 🔞 - M R DEVELOPER</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src='//libtl.com/sdk.js' data-zone='10531317' data-sdk='show_10531317'></script>
+
+    <style>
+        /* --- ১. কালার ভেরিয়েবল এবং গ্লোবাল স্টাইলস --- */
+        :root { 
+            --primary: #6366f1; 
+            --secondary: #0ea5e9; 
+            --bg: #0f172a; 
+            --card-bg: #1e293b; 
+            --text: #f8fafc;
+            --success: #10b981; 
+            --error: #ef4444; 
+            --warning: #facc15; 
+            --glass: rgba(255, 255, 255, 0.05);
+            --shadow-v7: 0 6px 20px rgba(0,0,0,0.6);
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding-bottom: 80px; /* ৩৫% ছোট করা হয়েছে */
+            overflow-x: hidden; 
+            line-height: 1.3;
+            user-select: none;
+        }
+
+        /* --- ২. কাস্টম নোটিশ এনিমেশনস --- */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .toast-notice {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            padding: 12px 22px; border-radius: 13px; font-weight: 900; font-size: 13px;
+            z-index: 999999; transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: var(--shadow-v7); display: flex; align-items: center; gap: 8px;
+            min-width: 210px; justify-content: center;
+        }
+        .toast-notice.show { top: 22px; }
+        .toast-success { background: var(--success); color: white; border-bottom: 3px solid #065f46; }
+        .toast-error { background: var(--error); color: white; border-bottom: 3px solid #991b1b; }
+
+        /* --- ৩. সরাসরি বিজ্ঞাপন প্রসেসিং ওভারলে লজিক --- */
+        #ad-waiting-overlay-v7 {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.995); z-index: 1000000; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; backdrop-filter: blur(15px);
+        }
+        .ad-loader-v7 { width: 40px; height: 40px; border: 5px solid #334155; border-top: 5px solid var(--secondary); border-radius: 50%; animation: spin 1.2s linear infinite; margin-bottom: 16px; }
+
+        /* --- ৪. রিডিজাইনড হেডার ও টপ প্রোফাইল (৩৫% ছোট) --- */
+        .app-header-v7 { 
+            background: linear-gradient(135deg, #1e1b4b, #312e81); padding: 22px 10px 30px; 
+            text-align: center; border-radius: 0 0 22px 22px; position: relative;
+        }
+        
+        .top-user-avatar-v7 { display: flex; flex-direction: column; align-items: center; margin-bottom: 8px; }
+        .avatar-mini-v7 { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--secondary); box-shadow: 0 3px 10px rgba(0,0,0,0.5); object-fit: cover; }
+        .bal-badge-v7 { background: linear-gradient(90deg, #6366f1, #0ea5e9); padding: 3px 10px; border-radius: 8px; display: flex; align-items: center; gap: 4px; margin-top: 5px; box-shadow: 0 3px 8px rgba(14, 165, 233, 0.35); }
+        .bal-badge-v7 h2 { margin: 0; font-size: 10px; font-weight: 900; }
+
+        .brand-container-v7 { display: inline-block; position: relative; }
+        .brand-container-v7 h1 { margin: 0; font-size: 13px; font-weight: 900; letter-spacing: 0.3px; }
+        .brand-line-v7 { width: 100%; height: 2.2px; background: var(--secondary); border-radius: 1px; margin-top: 2px; box-shadow: 0 0 5px var(--secondary); }
+
+        /* --- ৫. কমপ্যাক্ট ফিচার ডিজাইন (৩৫% ছোট) --- */
+        .search-container-v7 { padding: 0 16px 10px; margin-top: 12px; }
+        .search-input-v7 { width: 100%; padding: 8px 13px; border-radius: 12px; border: 1.5px solid var(--primary); background: #1e293b; color: white; font-size: 11px; outline: none; box-shadow: inset 0 1.5px 7px rgba(0,0,0,0.3); }
+
+        .video-feed-v7 { padding: 0 10px; display: flex; flex-direction: column; gap: 8px; }
+        .v-card-v7 { background: var(--card-bg); border-radius: 13px; display: flex; align-items: center; padding: 8px; border: 1px solid var(--glass); box-shadow: 0 5px 12px rgba(0,0,0,0.2); animation: fadeInUp 0.5s ease-out; }
+        .v-thumb-v7 { width: 65px; height: 42px; min-width: 65px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(14, 165, 233, 0.15); }
+        .v-thumb-v7 img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .v-info-v7 { flex-grow: 1; padding-left: 10px; overflow: hidden; }
+        .v-title-v7 { margin: 0 0 5px; font-size: 11px; font-weight: 800; color: #fff; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+        
+        .btn-v7-unlock { background: linear-gradient(135deg, var(--primary), #312e81); color: #fff; border: none; padding: 5px 12px; border-radius: 5px; font-weight: 900; font-size: 8px; cursor: pointer; text-transform: uppercase; }
+        .btn-v7-get { background: var(--success) !important; color: #fff !important; border: none; padding: 5px 12px; border-radius: 5px; font-weight: 900; font-size: 8px; cursor: pointer; }
+        .btn-v7-locked { background: var(--error) !important; color: #fff !important; border: none; padding: 5px 12px; border-radius: 5px; font-weight: 900; font-size: 8px; opacity: 0.8; cursor: not-allowed; }
+
+        /* --- ৬. বিস্তারিত প্রোফাইল সেকশন --- */
+        .section-box-v7 { display: none; padding: 13px; text-align: center; animation: fadeInUp 0.5s ease; }
+        .active-box-v7 { display: block; }
+
+        .profile-card-v7 { background: var(--card-bg); border-radius: 20px; padding: 16px; border: 1.5px solid var(--primary); margin-bottom: 16px; box-shadow: var(--shadow-v7); }
+        .profile-large-img-v7 { width: 58px; height: 58px; border-radius: 50%; border: 3px solid var(--secondary); margin-bottom: 10px; box-shadow: 0 0 16px rgba(14, 165, 233, 0.4); object-fit: cover; }
+        
+        .profile-info-row { font-size: 11px; margin: 4px 0; color: #cbd5e1; display: flex; justify-content: center; gap: 5px; }
+        .profile-info-row strong { color: #fff; font-weight: 900; }
+
+        .bal-hero-v7 { background: linear-gradient(135deg, #1e40af, #1e1b4b); padding: 16px; border-radius: 16px; margin: 13px 0; border: 1.5px solid var(--secondary); box-shadow: 0 6px 13px rgba(0,0,0,0.3); }
+        .bal-hero-v7 h1 { margin: 6px 0; color: var(--success); font-size: 21px; letter-spacing: 0.6px; }
+
+        .withdraw-form-v7 { text-align: left; background: #0f172a; padding: 16px; border-radius: 16px; border: 1px solid #334155; margin-top: 16px; }
+        .label-v7 { display: block; font-size: 10px; color: #94a3b8; margin: 10px 0 5px; font-weight: bold; }
+        .input-v7 { width: 100%; padding: 10px; border-radius: 8px; background: #1e293b; color: white; border: 1.5px solid #334155; margin-bottom: 8px; box-sizing: border-box; font-size: 11px; }
+
+        .history-table-v7 { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 16px; }
+        .history-table-v7 td { padding: 8px 5px; border-bottom: 1px solid #1e293b; text-align: left; }
+        .status-paid-v7 { color: var(--success); font-weight: 900; }
+        .status-pending-v7 { color: var(--warning); font-weight: 900; }
+
+        /* --- ৭. আর্ন ও রেফার পেজ --- */
+        .bonus-badge-v7 { background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 13px; border-radius: 16px; font-weight: 900; font-size: 13px; border: 1.5px solid var(--success); margin: 13px 0; }
+        .ref-link-box-v7 { background: #0f172a; padding: 12px; border-radius: 10px; border: 1.5px dashed var(--secondary); margin: 13px 0; word-break: break-all; font-size: 9px; color: var(--secondary); line-height: 1.4; }
+
+        /* --- ৮. নেভিগেশন বার --- */
+        .nav-footer-v7 { 
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #1e293b; 
+            display: flex; justify-content: space-around; padding: 10px 0; 
+            border-radius: 20px 20px 0 0; border-top: 2px solid var(--primary); 
+            z-index: 10000; box-shadow: 0 -8px 22px rgba(0,0,0,0.7); 
+        }
+        .nav-item-v7 { text-align: center; color: #94a3b8; font-size: 8px; font-weight: 800; cursor: pointer; flex: 1; }
+        .nav-item-v7 i { font-size: 16px; display: block; margin-bottom: 3px; }
+        .nav-item-v7.active { color: var(--secondary); transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+
+    <div id="notice-toast" class="toast-notice"><i id="toast-icon"></i> <span id="toast-text"></span></div>
+
+    <div id="ad-waiting-overlay-v7">
+        <div class="ad-loader-v7"></div>
+        <h2 style="color:var(--secondary); font-weight: 900; font-size: 13px;">বিজ্ঞাপন প্রসেস হচ্ছে...</h2>
+        <p style="color:#94a3b8; padding: 0 32px; font-size: 10px;">বিজ্ঞাপনের ভেতর ১৫ সেকেন্ড অপেক্ষা করুন। ফিরে এসে "ভিডিওটি নিন" বাটনে ক্লিক করুন।</p>
+    </div>
+
+    <div id="home" class="section-box-v7 active-box-v7" style="padding: 0;">
+        <div class="app-header-v7">
+            <div class="top-user-avatar-v7">
+                <img src="" id="user-avatar-top" class="avatar-mini-v7">
+                <div class="bal-badge-v7">
+                    <i class="fas fa-wallet" style="font-size: 7px;"></i>
+                    <h2 id="home-bal-display">৳ 0.00</h2>
+                </div>
+            </div>
+            
+            <div class="brand-container-v7">
+                <h1>VAIRAL VIDEO 🔞</h1>
+                <div class="brand-line-v7"></div> </div>
+        </div>
+
+        <div class="search-container-v7">
+            <input type="text" id="videoSearch" class="search-input-v7" placeholder="ভিডিও খুঁজুন (Episode 1)..." oninput="renderAppV7()">
+        </div>
+        
+        <div class="video-feed-v7" id="video-list-container">ডেটা লোড হচ্ছে...</div>
+    </div>
+
+    <div id="earn" class="section-box-v7" style="padding-top: 26px;">
+        <div class="profile-card-v7">
+            <i class="fas fa-coins" style="font-size: 39px; color: gold; filter: drop-shadow(0 0 10px gold);"></i>
+            <h2 style="margin-top: 13px; font-size: 16px;">উপার্জন করুন</h2>
+            <div id="task-ui-v7" style="margin-top: 20px;">
+                <div class="v-card-v7" style="justify-content: space-between; padding: 13px;">
+                    <div style="text-align: left;">
+                        <h4 style="margin: 0; color: #fff; font-size: 11px;">টেলিগ্রাম জয়েন করুন</h4>
+                        <span style="color: var(--success); font-weight: 900; font-size: 12px;">৳২৫.০০</span>
+                    </div>
+                    <button class="btn-v7-unlock" onclick="handleClaimV7()">REFRESH</button>
+                </div>
+            </div>
+            <p id="task-done-v7" style="display:none; color:var(--success); margin-top:22px; font-weight: 900; font-size: 13px;">সব টাস্ক সম্পন্ন হয়েছে! ✅</p>
+        </div>
+    </div>
+
+    <div id="refer" class="section-box-v7" style="padding-top: 26px;">
+        <div class="profile-card-v7">
+            <h2 style="font-size: 16px;">👥 Referral System</h2>
+            <div class="bonus-badge-v7">বোনাস: ৳২৫.০০ / রেফার</div>
+            <p style="color:#94a3b8; font-size: 11px;">বন্ধুদের ইনভাইট করুন এবং আনলিমিটেড টাকা ইনকাম করুন।</p>
+            <div class="ref-link-box-v7" id="user-ref-url">লোডিং...</div>
+            <button onclick="copyRefV7()" class="btn-v7-unlock" style="width:100%; padding: 13px; font-size: 11px;">লিঙ্ক কপি করুন</button>
+            <div style="margin-top: 30px; border-top: 1.5px solid #334155; padding-top: 20px;">
+                <p style="margin: 0; opacity: 0.7; font-size: 11px;">মোট রেফারেল</p>
+                <h1 id="user-total-refs" style="color:var(--primary); font-size: 32px; margin: 10px 0;">0</h1>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile" class="section-box-v7" style="padding-top: 26px;">
+        <div class="profile-card-v7">
+            <img src="" id="user-avatar-main" class="profile-large-img-v7">
+            <h3 id="prof-name-v7" style="margin: 7px 0 10px; font-size: 14px;">User Name</h3>
+            
+            <div class="profile-info-row"><i class="fas fa-at"></i> Username: <strong id="prof-username-v7">@user</strong></div>
+            <div class="profile-info-row"><i class="fas fa-id-card"></i> User ID: <strong id="prof-id-v7">123456789</strong></div>
+
+            <div class="bal-hero-v7">
+                <small style="text-transform: uppercase; font-size: 8px; opacity: 0.8; letter-spacing: 1px;">মোট উপার্জন</small>
+                <h1 id="prof-bal-display">৳ 0.00</h1>
+            </div>
+
+            <div class="withdraw-form-v7">
+                <h4 style="text-align: center; color: var(--secondary); margin-bottom: 16px; font-size: 12px; border-bottom: 1.5px solid #334155; padding-bottom: 8px;">উইথড্র রিকোয়েস্ট</h4>
+                <label class="label-v7">পেমেন্ট মেথড</label>
+                <select id="sel-method-v7" class="input-v7">
+                    <option value="Bkash">বিকাশ (Bkash)</option>
+                    <option value="Nagad">নগদ (Nagad)</option>
+                    <option value="Rocket">রকেট (Rocket)</option>
+                </select>
+                <label class="label-v7">টাকার পরিমাণ (৫০০+)</label>
+                <input type="number" id="inp-amt-v7" class="input-v7" placeholder="মিনিমাম ৫০০ টাকা">
+                <label class="label-v7">মোবাইল নাম্বার</label>
+                <input type="number" id="inp-phone-v7" class="input-v7" placeholder="01XXXXXXXXX">
+                <button onclick="submitWithdrawV7()" class="btn-v7-unlock" style="width:100%; padding: 13px; margin-top: 13px; font-size: 11px;">রিকোয়েস্ট সাবমিট</button>
+                <div style="margin-top: 13px; text-align: center; font-size: 8px; color: #94a3b8; font-weight: bold;">
+                    * উইথড্র শর্ত: ৫০০ টাকা ব্যালেন্স এবং ২০টি রেফারেল মাস্ট। সাবমিট করলে টাকা তাৎক্ষণিক কাটা হবে।
+                </div>
+            </div>
+
+            <div style="text-align: left; margin-top: 30px;">
+                <h4 style="border-left: 3px solid var(--primary); padding-left: 8px; margin-bottom: 13px;"><i class="fas fa-history"></i> পেমেন্ট হিস্ট্রি</h4>
+                <div style="overflow-x: auto;">
+                    <table class="history-table-v7">
+                        <thead><tr><th>তারিখ</th><th>টাকা</th><th>অবস্থা</th></tr></thead>
+                        <tbody id="pay-history-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-footer-v7">
+        <div class="nav-item-v7 active" onclick="switchTabV7('home', this)"><i class="fas fa-home"></i>Home</div>
+        <div class="nav-item-v7" onclick="switchTabV7('earn', this)"><i class="fas fa-wallet"></i>Earn</div>
+        <div class="nav-item-v7" onclick="switchTabV7('refer', this)"><i class="fas fa-user-plus"></i>Refer</div>
+        <div class="nav-item-v7" onclick="switchTabV7('profile', this)"><i class="fas fa-user-circle"></i>Profile</div>
+    </div>
+
+    <script>
+        // --- ফায়ারবেস ইন্টিগ্রেশন ---
+        const firebaseConfigV7 = { databaseURL: "https://vairal-video-18-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfigV7);
+        const dbV7 = firebase.database();
+        const tgV7 = window.Telegram.WebApp; tgV7.expand();
+
+        const activeUserV7 = tgV7.initDataUnsafe?.user || { id: 6856009995, first_name: "MD. Mizanur", username: "m_r_developer" };
+        const BOT_ID_URL = "vairal_video_18_bot";
+        let balCurrent = 0; let refCurrent = 0;
+
+        // ইউজার তথ্য সেটআপ
+        document.getElementById('prof-name-v7').innerText = activeUserV7.first_name + (activeUserV7.last_name ? " " + activeUserV7.last_name : "");
+        document.getElementById('prof-username-v7').innerText = "@" + (activeUserV7.username || "n/a");
+        document.getElementById('prof-id-v7').innerText = activeUserV7.id;
+        const picUrlV7 = activeUserV7.photo_url || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+        document.getElementById('user-avatar-top').src = picUrlV7;
+        document.getElementById('user-avatar-main').src = picUrlV7;
+        document.getElementById('user-ref-url').innerText = `https://t.me/${BOT_ID_URL}?start=${activeUserV7.id}`;
+
+        function notifyV7(msg, status) {
+            const toast = document.getElementById('notice-toast');
+            toast.className = `toast-notice ${status === 'success' ? 'toast-success' : 'toast-error'} show`;
+            document.getElementById('toast-text').innerText = msg;
+            document.getElementById('toast-icon').className = status === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        // রিয়েলটাইম ডেটা সিঙ্ক্রোনাইজেশন
+        dbV7.ref('users/' + activeUserV7.id + '/balance').on('value', (s) => {
+            balCurrent = s.val() || 0;
+            document.getElementById('home-bal-display').innerText = "৳ " + balCurrent.toFixed(2);
+            document.getElementById('prof-bal-display').innerText = "৳ " + balCurrent.toFixed(2);
+        });
+
+        dbV7.ref('users/' + activeUserV7.id + '/refs').on('value', (s) => {
+            refCurrent = s.val() || 0;
+            document.getElementById('user-total-refs').innerText = refCurrent;
+        });
+
+        dbV7.ref('withdrawals/' + activeUserV7.id).on('value', (s) => {
+            const tbody = document.getElementById('pay-history-body'); tbody.innerHTML = "";
+            const h = s.val(); if (h) Object.values(h).reverse().forEach(v => {
+                const stC = v.status === 'Paid' ? 'status-paid-v7' : 'status-pending-v7';
+                tbody.innerHTML += `<tr><td>${v.date}</td><td>৳${v.amount}</td><td class="${stC}">${v.status}</td></tr>`;
+            });
+        });
+
+        // ভিডিও ডেটা কন্ট্রোলার
+        let videosDBV7 = {};
+        dbV7.ref('videos').on('value', (s) => { videosDBV7 = s.val() || {}; renderAppV7(); });
+
+        function switchTabV7(target, el) {
+            document.querySelectorAll('.section-box-v7').forEach(v => v.classList.remove('active-box-v7'));
+            document.getElementById(target).classList.add('active-box-v7');
+            document.querySelectorAll('.nav-item-v7').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            if (target === 'earn') syncEarnTaskV7();
+        }
+
+        function syncEarnTaskV7() {
+            if (localStorage.getItem('task_forever_v7_' + activeUserV7.id)) {
+                document.getElementById('task-ui-v7').style.display = 'none';
+                document.getElementById('task-done-v7').style.display = 'block';
+            }
+        }
+
+        function handleClaimV7() {
+            if (localStorage.getItem('task_forever_v7_' + activeUserV7.id)) return;
+            dbV7.ref('users/' + activeUserV7.id + '/balance').transaction(v => (v || 0) + 25);
+            localStorage.setItem('task_forever_v7_' + activeUserV7.id, 'true');
+            notifyV7("অভিনন্দন! ৳২৫ যোগ করা হয়েছে।", "success");
+            syncEarnTaskV7();
+        }
+
+        function renderAppV7() {
+            const listUI = document.getElementById('video-list-container');
+            const searchVal = document.getElementById('videoSearch').value.toLowerCase().trim();
+            listUI.innerHTML = "";
+            
+            Object.keys(videosDBV7).forEach(k => {
+                const v = videosDBV7[k];
+                if (v.name.toLowerCase().includes(searchVal)) {
+                    const dlStatus = localStorage.getItem('log_dl_v7_'+k) && (Date.now() - localStorage.getItem('log_dl_v7_'+k) < 86400000);
+                    const readyStatus = localStorage.getItem('log_ready_v7_'+k) && (Date.now() - localStorage.getItem('log_ready_v7_'+k) < 600000);
+                    
+                    let btnHTML = `<button class="btn-v7-unlock" onclick="handleAdWaitV7('${k}')">UNLOCK</button>`;
+                    if (dlStatus) btnHTML = `<button class="btn-v7-locked" onclick="notifyV7('ইনবক্স দেখুন!','error')">INBOX</button>`;
+                    else if (readyStatus) btnHTML = `<button class="btn-v7-get" onclick="getFinalV7('${k}')">ভিডিওটি নিন</button>`;
+
+                    listUI.innerHTML += `<div class="v-card-v7"><div class="v-thumb-v7"><img src="${v.photo}"></div><div class="v-info-v7"><h4 class="v-title-v7">${v.name}</h4>${btnHTML}</div></div>`;
+                }
+            });
+        }
+
+        // ১৫ সেকেন্ড সরাসরি বিজ্ঞাপন ওয়েটিং লজিক
+        function handleAdWaitV7(vidID) {
+            const adData = JSON.parse(localStorage.getItem('daily_ad_v7_'+activeUserV7.id)) || {count: 0, date: ""};
+            const currentDay = new Date().toLocaleDateString();
+            
+            if (adData.date === currentDay && adData.count >= 5) {
+                localStorage.setItem('log_ready_v7_'+vidID, Date.now());
+                renderAppV7();
+                notifyV7("ভিডিওটি প্রস্তুত! 'ভিডিওটি নিন' ক্লিক করুন।", "success");
+            } else {
+                const overlay = document.getElementById('ad-waiting-overlay-v7');
+                overlay.style.display = 'flex';
+                
+                if(window.show_10531317) window.show_10531317();
+
+                // ঠিক ১৫ সেকেন্ড ওয়েট লজিক
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    const newCnt = adData.date === currentDay ? adData.count + 1 : 1;
+                    localStorage.setItem('daily_ad_v7_'+activeUserV7.id, JSON.stringify({count: newCnt, date: currentDay}));
+                    localStorage.setItem('log_ready_v7_'+vidID, Date.now());
+                    renderAppV7();
+                    notifyV7("অ্যাড সফল! 'ভিডিওটি নিন' বাটনে ক্লিক করুন।", "success");
+                }, 15000); // ১৫ সেকেন্ড
+            }
+        }
+
+        function getFinalV7(vidKey) {
+            localStorage.setItem('log_dl_v7_'+vidKey, Date.now());
+            localStorage.removeItem('log_ready_v7_'+vidKey);
+            renderAppV7();
+            window.location.href = `https://t.me/${BOT_ID_URL}?start=vid_${vidKey}`;
+        }
+
+        // উইথড্র সিকিউরিটি লজিক (৳৫০০ ও ২০ রেফার মাস্ট চেক)
+        function submitWithdrawV7() {
+            const valAmt = parseFloat(document.getElementById('inp-amt-v7').value);
+            const valPhn = document.getElementById('inp-phone-v7').value;
+            const valMet = document.getElementById('sel-method-v7').value;
+
+            if (balCurrent < 500) return notifyV7("ব্যালেন্স কমপক্ষে ৫০০ টাকা প্রয়োজন।", "error");
+            if (refCurrent < 20) return notifyV7("২০টি রেফার না হলে উইথড্র সম্ভব নয়।", "error");
+            if (isNaN(valAmt) || valAmt < 500 || valAmt > balCurrent) return notifyV7("সঠিক ব্যালেন্স লিখুন!", "error");
+            if (!valPhn || valPhn.length < 11) return notifyV7("সঠিক পেমেন্ট নাম্বার দিন!", "error");
+
+            // ব্যালেন্স ডিডাকশন ও রিকোয়েস্ট সাবমিট
+            dbV7.ref('users/' + activeUserV7.id + '/balance').transaction(c => (c || 0) - valAmt).then(() => {
+                dbV7.ref('withdrawals/' + activeUserV7.id).push({
+                    amount: valAmt, phone: valPhn, method: valMet,
+                    date: new Date().toLocaleDateString() + " | " + new Date().toLocaleTimeString(), status: "Pending"
+                });
+                notifyV7("সফল! টাকা তাৎক্ষণিক কেটে নেওয়া হয়েছে।", "success");
+            });
+        }
+
+        function copyRefV7() {
+            const textToCopy = document.getElementById('user-ref-url').innerText;
+            const tempArea = document.createElement('textarea'); tempArea.value = textToCopy;
+            document.body.appendChild(tempArea); tempArea.select(); document.execCommand('copy');
+            document.body.removeChild(tempArea); notifyV7("রেফারেল লিঙ্ক কপি হয়েছে!", "success");
+        }
+    </script>
+</body>
+</html>
