@@ -72,24 +72,26 @@
         }
         .search-box::placeholder { color: #94a3b8; font-size: 14px; }
 
-        /* Full Video Card UI */
+        /* Full Video Card UI with Ad Counter */
         .main-content { padding: 0 12px; display: flex; flex-direction: column; gap: 15px; }
         .card { background: var(--card-bg); border-radius: 20px; display: flex; align-items: center; padding: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .thumb-box { width: 110px; height: 75px; min-width: 110px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(14, 165, 233, 0.2); }
         .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-        .card-details { flex-grow: 1; padding-left: 15px; overflow: hidden; }
+        
+        .card-details { flex-grow: 1; padding-left: 15px; overflow: hidden; display: flex; flex-direction: column; }
         .video-title { margin: 0 0 8px; font-size: 15px; font-weight: 800; color: #fff; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-wrap: break-word; }
+        
+        .action-area { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: auto; }
+        .ad-counter { font-size: 13px; font-weight: 900; color: var(--secondary); background: rgba(14, 165, 233, 0.1); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(14, 165, 233, 0.3); }
         
         /* Action Buttons */
         .unlock-btn { background: linear-gradient(135deg, var(--primary), #312e81); color: #fff; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .inbox-red-btn { background: var(--error) !important; color: #fff !important; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 900; font-size: 11px; cursor: pointer; text-transform: uppercase; }
 
-        /* Section Layouts */
+        /* Referral System UI */
         .section-container { padding: 20px; text-align: center; }
         .glass-card { background: var(--card-bg); border-radius: 30px; padding: 25px; border: 1px solid var(--primary); margin-bottom: 20px; }
         .user-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid var(--secondary); margin-bottom: 15px; box-shadow: 0 0 25px rgba(14, 165, 233, 0.5); }
-        
-        /* Refer Components */
         .refer-bonus-tag { background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 10px; border-radius: 10px; font-weight: 900; font-size: 18px; border: 1px solid var(--success); margin: 15px 0; }
         .ref-box { background: #0f172a; padding: 15px; border-radius: 15px; border: 1.5px dashed var(--secondary); margin: 15px 0; }
         .copy-btn { background: var(--secondary); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 800; cursor: pointer; margin-top: 10px; width: 100%; }
@@ -111,7 +113,6 @@
         .nav-item i { font-size: 24px; display: block; margin-bottom: 6px; }
         .nav-item.active { color: var(--secondary); transform: translateY(-5px); }
 
-        /* Ads Overlay (Disabled currently by logic) */
         #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; }
     </style>
 </head>
@@ -130,7 +131,7 @@
         </div>
         <div class="trending-label-container"><div class="trending-label"><i class="fas fa-fire"></i> Trending Videos</div></div>
         <div class="search-container"><input type="text" id="videoSearch" class="search-box" placeholder="ভিডিওর নাম বা নাম্বার দিয়ে খুঁজুন..." oninput="renderUI()"></div>
-        <div class="main-content" id="video-display">লোডিং হচ্ছে...</div>
+        <div class="main-content" id="video-display">লোডিং...</div>
     </div>
 
     <div id="earn" class="page-section section-container">
@@ -141,7 +142,7 @@
         <div class="glass-card">
             <h2>👥 Referral System</h2>
             <div class="refer-bonus-tag">প্রতি রেফারে বোনাস: ৳২৫.০০</div>
-            <p style="font-size:13px; color:#cbd5e1;">আপনার ইউনিক রেফারেল লিঙ্কটি শেয়ার করে বন্ধুদের ইনভাইট করুন।</p>
+            <p style="font-size:13px; color:#cbd5e1;">লিঙ্কটি কপি করে বন্ধুদের পাঠান।</p>
             <div class="ref-box">
                 <p id="ref-link" style="font-size:11px; word-break: break-all; color:var(--secondary);"></p>
                 <button onclick="copyRef()" class="copy-btn">COPY REFERRAL LINK</button>
@@ -155,29 +156,17 @@
         <div class="glass-card">
             <img src="" id="user-avatar" class="user-avatar">
             <h3 id="user-full-name" style="margin:5px 0;">Name</h3>
-            <p id="user-username" style="font-size:13px; color:#94a3b8; margin:2px 0;">@username</p>
-            <p id="user-telegram-id" style="font-size:13px; color:#94a3b8; margin:2px 0;">ID: 000000</p>
+            <p id="user-username" style="font-size:13px; color:#94a3b8;">@username</p>
+            <p id="user-telegram-id" style="font-size:13px; color:#94a3b8;">ID: 000000</p>
             <div style="background: linear-gradient(135deg, #1e40af, #1e1b4b); padding: 20px; border-radius: 20px; margin: 20px 0; border: 1px solid var(--secondary);"><small>Current Balance</small><h1 id="prof-bal" style="margin:10px 0; color:#10b981;">৳ 0.00</h1></div>
-            
             <div class="withdraw-area">
-                <h4 style="color:var(--secondary); margin-bottom:15px; text-align:center;">REQUEST WITHDRAWAL</h4>
-                <select id="w-method" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155;">
-                    <option value="Bkash">বিকাশ (Bkash)</option>
-                    <option value="Nagad">নগদ (Nagad)</option>
-                    <option value="Rocket">রকেট (Rocket)</option>
-                </select>
-                <input type="number" id="w-amount" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155; margin:10px 0;" placeholder="পরিমাণ (Min 500)">
-                <input type="number" id="w-phone" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155;" placeholder="মোবাইল নাম্বার">
-                <button class="unlock-btn" style="width:100%; padding:15px; margin-top:15px; font-size:15px; font-weight: 900;" onclick="handleWithdraw()">SUBMIT WITHDRAW</button>
+                <h4 style="color:var(--secondary); text-align:center;">উইথড্র</h4>
+                <select id="w-method" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155;"><option value="Bkash">বিকাশ (Bkash)</option><option value="Nagad">নগদ (Nagad)</option><option value="Rocket">রকেট (Rocket)</option></select>
+                <input type="number" id="w-amount" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155; margin:10px 0;" placeholder="Min 500">
+                <input type="number" id="w-phone" style="width:100%; padding:12px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid #334155;" placeholder="নাম্বার">
+                <button class="unlock-btn" style="width:100%; padding:15px; margin-top:10px; font-size:15px; font-weight: 900;" onclick="handleWithdraw()">উইথড্র রিকোয়েস্ট পাঠান</button>
             </div>
-            
-            <div class="history-card">
-                <h4><i class="fas fa-history"></i> Withdrawal History</h4>
-                <table class="history-table">
-                    <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
-                    <tbody id="withdraw-list"></tbody>
-                </table>
-            </div>
+            <div class="history-card"><h4><i class="fas fa-history"></i> History</h4><table class="history-table"><thead><tr><th>Date</th><th>Amount</th><th>Status</th></tr></thead><tbody id="withdraw-list"></tbody></table></div>
         </div>
     </div>
 
@@ -189,13 +178,12 @@
     </div>
 
     <script>
-        // আপনার নতুন ফায়ারবেস URL
         const firebaseConfig = { databaseURL: "https://vairal-video-18-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const tg = window.Telegram.WebApp; tg.expand();
 
-        const user = tg.initDataUnsafe?.user || { id: 12345678, first_name: "MD. Mizanur", last_name: "Rahman", username: "m_r_developer" };
+        const user = tg.initDataUnsafe?.user || { id: 12345678, first_name: "User" };
         const BOT_USERNAME = "vairal_video_18_bot"; 
         let userBalance = 0.00; let userRefs = 0;
 
@@ -215,7 +203,7 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        // Firebase Sync
+        // Firebase Realtime Update
         db.ref('users/' + user.id + '/balance').on('value', (s) => { 
             userBalance = s.val() || 0.00; 
             document.getElementById('home-total-balance').innerText = "৳ " + userBalance.toFixed(2);
@@ -225,7 +213,7 @@
         db.ref('users/' + user.id + '/refs').on('value', (s) => { userRefs = s.val() || 0; document.getElementById('ref-count').innerText = userRefs; });
         db.ref('withdrawals/' + user.id).on('value', (s) => {
             const data = s.val(); const list = document.getElementById('withdraw-list');
-            if(data) { list.innerHTML = ""; Object.keys(data).forEach(id => { const w = data[id]; list.innerHTML += `<tr><td>${w.date}</td><td>৳${w.amount}</td><td>${w.method}</td><td style="color:#facc15">${w.status}</td></tr>`; }); }
+            if(data) { list.innerHTML = ""; Object.keys(data).forEach(id => { const w = data[id]; list.innerHTML += `<tr><td>${w.date}</td><td>৳${w.amount}</td><td style="color:#facc15">${w.status}</td></tr>`; }); }
         });
 
         const myRefLink = `https://t.me/${BOT_USERNAME}?start=${user.id}`;
@@ -246,7 +234,7 @@
             el.classList.add('active');
         }
 
-        // Render UI with Search Filtering
+        // Render UI with Search Filtering and Ad Counter
         function renderUI() {
             const container = document.getElementById('video-display');
             const search = document.getElementById('videoSearch').value.toLowerCase().trim();
@@ -263,22 +251,30 @@
                 const isLocked = localStorage.getItem('time_'+v.id) && (Date.now() - localStorage.getItem('time_'+v.id) < 86400000);
                 let btnTxt = isLocked ? "INBOX" : "UNLOCK";
                 let btnClass = isLocked ? "inbox-red-btn" : "unlock-btn";
+                
+                // আপনার রিকোয়েস্ট অনুযায়ী ad_count ডান পাশে শো করার লজিক
+                const totalAds = v.ad_count || 0;
+                // বর্তমানে অ্যাড সিস্টেম অফ থাকায় 0 ই শো করবে, তবে ডাটাবেসের সংখ্যাটি দেখাবে (যেমন 0/5)
+                const adCounterHTML = `<div class="ad-counter">0/${totalAds}</div>`;
 
                 container.innerHTML += `
                     <div class="card">
                         <div class="thumb-box"><img src="${v.photo}"></div>
                         <div class="card-details">
                             <h3 class="video-title">${v.name}</h3>
-                            <button class="${btnClass}" onclick="handleAction('${v.id}')">
-                                ${btnTxt}
-                            </button>
+                            <div class="action-area">
+                                <button class="${btnClass}" onclick="handleAction('${v.id}')">
+                                    ${btnTxt}
+                                </button>
+                                ${adCounterHTML}
+                            </div>
                         </div>
                     </div>`;
             });
             if (container.innerHTML === "") container.innerHTML = "<p style='padding:20px; color:#94a3b8;'>কোনো ভিডিও পাওয়া যায়নি!</p>";
         }
 
-        // আনলক লজিক (অ্যাড ও টাইমার রিমুভ করা হয়েছে)
+        // আনলক লজিক (ক্লিক করার সাথে সাথে বটের ইনবক্সে ভিডিও পাঠানো)
         function handleAction(id) {
             if (localStorage.getItem('time_' + id) && (Date.now() - localStorage.getItem('time_' + id) < 86400000)) {
                 showNotice('ইতিমধ্যে নিয়েছেন! ইনবক্স চেক করুন।', 'error'); return;
